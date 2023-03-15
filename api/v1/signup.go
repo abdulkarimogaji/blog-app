@@ -22,32 +22,25 @@ func signUp(c *gin.Context) {
 	var body signUpRequest
 	err := c.ShouldBindBodyWith(&body, binding.JSON)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "bad request",
-			"message": err.Error(),
-			"error":   true,
-			"data":    nil,
-		})
+		validationResponse(err, c)
 		return
 	}
 
 	hashedPassword, err := util.HashPassword(body.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
-			"data":    nil,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 		})
 		return
 	}
-	stmt, err := db.DbConn.Prepare("INSERT INTO user (first_name, last_name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);")
+	stmt, err := db.DbConn.Prepare("INSERT INTO users (first_name, last_name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
-			"data":    nil,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 		})
 		return
 	}
@@ -59,10 +52,9 @@ func signUp(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
-			"data":    nil,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 		})
 		return
 	}
@@ -70,10 +62,9 @@ func signUp(c *gin.Context) {
 	id, err := result.LastInsertId()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
-			"data":    nil,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 		})
 		return
 	}

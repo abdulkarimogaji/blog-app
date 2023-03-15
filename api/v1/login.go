@@ -18,14 +18,8 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Id        int       `json:"id"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Token     string    `json:"token"`
+	User  user   `json:"user"`
+	Token string `json:"token"`
 }
 
 func login(c *gin.Context) {
@@ -34,24 +28,19 @@ func login(c *gin.Context) {
 
 	// request validation
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "bad request",
-			"message": err.Error(),
-			"error":   true,
-			"data":    nil,
-		})
+		validationResponse(err, c)
 		return
 	}
 
 	// get user
 	var resp loginResponse
-	row := db.DbConn.QueryRow("SELECT id, first_name, last_name, password, email, created_at, updated_at from user WHERE email = ?", body.Email)
-	err = row.Scan(&resp.Id, &resp.FirstName, &resp.LastName, &resp.Password, &resp.Email, &resp.CreatedAt, &resp.UpdatedAt)
+	row := db.DbConn.QueryRow("SELECT id, first_name, last_name, password, email, created_at, updated_at from users WHERE email = ?", body.Email)
+	err = row.Scan(&resp.User.Id, &resp.User.FirstName, &resp.User.LastName, &resp.User.Password, &resp.User.Email, &resp.User.CreatedAt, &resp.User.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{
-				"status":  "not found",
+				"success": false,
 				"message": "User not found",
 				"error":   true,
 				"data":    nil,
@@ -59,20 +48,20 @@ func login(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 			"data":    nil,
 		})
 		return
 	}
 
 	//check password
-	ok := util.VerifyPassword(body.Password, resp.Password)
+	ok := util.VerifyPassword(body.Password, resp.User.Password)
 
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "bad request",
+			"success": false,
 			"message": "Incorrect email or password",
 			"error":   true,
 			"data":    nil,
@@ -84,32 +73,32 @@ func login(c *gin.Context) {
 	maker, err := auth.NewJwtMaker()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 			"data":    nil,
 		})
 		return
 	}
 
-	token, err := maker.CreateToken(resp.Id, time.Minute*5)
+	token, err := maker.CreateToken(resp.User.Id, time.Minute*5)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "server error",
-			"message": err.Error(),
-			"error":   true,
+			"success": false,
+			"message": "server error",
+			"error":   err.Error(),
 			"data":    nil,
 		})
 		return
 	}
 
 	resp.Token = token
-	resp.Password = ""
+	resp.User.Password = ""
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
+		"success": true,
 		"message": "login successful",
-		"error":   false,
+		"error":   nil,
 		"data":    resp,
 	})
 }
