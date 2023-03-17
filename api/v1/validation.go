@@ -27,8 +27,14 @@ func getErrorMsg(fe validator.FieldError) string {
 		return "Should be less than " + fe.Param()
 	case "gte":
 		return "Should be greater than " + fe.Param()
+	case "json":
+		return "Should be a valid json"
 	case "min":
 		return toSnakeCase(fe.Field()) + " should be at least " + fe.Param() + " characters"
+	case "url":
+		return "should be a valid url"
+	case "datetime":
+		return "should be in format: " + fe.Param()
 	}
 	return "Unknown error"
 }
@@ -49,6 +55,8 @@ func validationResponse(err error, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "validation error", "errors": out})
 		return
 	}
+
+	c.JSON(http.StatusBadRequest, gin.H{"error": err})
 }
 
 func toSnakeCase(str string) string {
