@@ -1,6 +1,8 @@
 package db
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	Id        int       `json:"id"`

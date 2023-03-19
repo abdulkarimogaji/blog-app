@@ -35,6 +35,8 @@ func getErrorMsg(fe validator.FieldError) string {
 		return "should be a valid url"
 	case "datetime":
 		return "should be in format: " + fe.Param()
+	case "email":
+		return "should be a valid email address"
 	}
 	return "Unknown error"
 }
