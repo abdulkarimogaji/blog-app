@@ -17,14 +17,15 @@ func main() {
 	}
 
 	// connect db
-	err = db.ConnectDB()
+	dbService, err := db.NewDBService()
 	if err != nil {
 		log.Fatalf("failed to connect to db %v", err)
 	}
 
 	// run server
-	err = api.RunServer()
+	server := api.NewServer(dbService)
+	err = server.Start()
 	if err != nil {
-		log.Fatalf("failed to run server %v", err)
+		log.Fatalf("failed to start server %v", err)
 	}
 }
