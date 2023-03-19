@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -25,10 +26,19 @@ func login(dbService db.DBService) gin.HandlerFunc {
 		// get user
 		user, err := dbService.GetUserByEmail(body.Email)
 		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{
+					"success": false,
+					"message": "user does not exist",
+					"error":   err.Error(),
+					"data":    nil,
+				})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
 				"message": "server error",
-				"error":   err,
+				"error":   err.Error(),
 				"data":    nil,
 			})
 			return
