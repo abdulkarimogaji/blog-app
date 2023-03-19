@@ -13,7 +13,12 @@ import (
 	"github.com/go-playground/validator"
 )
 
-func RunServer() error {
+type Server struct {
+	DbService db.DBService
+	Router    *gin.Engine
+}
+
+func NewServer(db db.DBService) *Server {
 	r := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -21,10 +26,10 @@ func RunServer() error {
 	}
 
 	lambda.ConfigureRoutes(r.Group("/api/lambda/"))
-	v1.ConfigureRoutes(r.Group("/v1/api/"))
+	v1.ConfigureRoutes(r.Group("/v1/api/"), db)
 
 	r.GET("/health", func(c *gin.Context) {
-		err := db.DbConn.Ping()
+		err := db.PingDB()
 
 		if err != nil {
 			log.Println("error here", err)
@@ -37,5 +42,9 @@ func RunServer() error {
 			"message": "pong",
 		})
 	})
-	return r.Run(":" + config.AppConfig.PORT)
+	return &Server{Router: r, DbService: db}
+}
+
+func (s *Server) Start() error {
+	return s.Router.Run(":" + config.AppConfig.PORT)
 }

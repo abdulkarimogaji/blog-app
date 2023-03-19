@@ -1,8 +1,8 @@
-package v1
+package db
 
 import "time"
 
-type user struct {
+type User struct {
 	Id        int       `json:"id"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
@@ -12,7 +12,7 @@ type user struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type profile struct {
+type Profile struct {
 	Id          int       `json:"id"`
 	UserId      int       `json:"user_id"`
 	City        string    `json:"city"`
