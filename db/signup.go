@@ -5,17 +5,17 @@ import (
 )
 
 type SignUpRequest struct {
-	Email       string `json:"email" binding:"required"`
-	Password    string `json:"password" binding:"required,min=6"`
-	FirstName   string `json:"first_name" binding:"required"`
-	LastName    string `json:"last_name" binding:"required"`
-	City        string `json:"city" binding:"required"`
-	Country     string `json:"country"`
-	Photo       string `json:"photo" binding:"omitempty,url"`
-	DateOfBirth string `json:"date_of_birth" binding:"omitempty,datetime=2006-01-02"`
-	About       string `json:"about"`
-	Settings    string `json:"settings" binding:"omitempty,json"`
-	Socials     string `json:"socials" binding:"omitempty,json"`
+	Email       string  `json:"email" binding:"required,email"`
+	Password    string  `json:"password" binding:"required,min=6"`
+	FirstName   string  `json:"first_name" binding:"required"`
+	LastName    string  `json:"last_name" binding:"required"`
+	City        *string `json:"city"`
+	Country     *string `json:"country"`
+	Photo       *string `json:"photo" binding:"omitempty,url"`
+	DateOfBirth *string `json:"date_of_birth" binding:"omitempty,datetime=2006-01-02"`
+	About       *string `json:"about"`
+	Settings    *string `json:"settings" binding:"omitempty,json"`
+	Socials     *string `json:"socials" binding:"omitempty,json"`
 }
 
 func (d *DBStruct) SignUp(body SignUpRequest) (int64, error) {
