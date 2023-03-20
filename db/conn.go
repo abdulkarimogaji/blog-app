@@ -19,6 +19,7 @@ type DBService interface {
 	GetBlogBySlug(slug string) (Blog, error)
 	GetBlogById(id int) (Blog, error)
 	GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error)
+	DeleteRow(tableName string, id int) (int, error)
 }
 
 func (db *DBStruct) PingDB() error {
