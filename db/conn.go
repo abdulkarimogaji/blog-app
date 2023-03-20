@@ -18,7 +18,7 @@ type DBService interface {
 	CreateBlog(body CreateBlogRequest) (Blog, error)
 	GetBlogBySlug(slug string) (Blog, error)
 	GetBlogById(id int) (Blog, error)
-	GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, error)
+	GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error)
 }
 
 func (db *DBStruct) PingDB() error {
