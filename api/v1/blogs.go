@@ -1,44 +1,41 @@
 package v1
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/abdulkarimogaji/blognado/db"
-	"github.com/abdulkarimogaji/blognado/util"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	_ "github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
 )
 
-func signUp(dbService db.DBService) gin.HandlerFunc {
+func createBlog(dbService db.DBService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		var body db.SignUpRequest
+		var body db.CreateBlogRequest
 		err := c.ShouldBindBodyWith(&body, binding.JSON)
 		if err != nil {
 			validationResponse(err, c)
 			return
 		}
 
-		hashedPassword, err := util.HashPassword(body.Password)
+		blog, err := dbService.CreateBlog(body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"message": "server error",
-				"error":   err.Error(),
-			})
-			return
-		}
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{
+					"success": false,
+					"message": "user does not exist",
+					"error":   err.Error(),
+					"data":    nil,
+				})
+				return
+			}
 
-		body.Password = hashedPassword
-		id, err := dbService.SignUp(body)
-		if err != nil {
 			me, ok := err.(*mysql.MySQLError)
 			if ok && me.Number == MYSQL_KEY_EXISTS {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"success": false,
-					"message": "user exists",
+					"message": "blog slug already exists",
 					"error":   err.Error(),
 				})
 				return
@@ -52,9 +49,9 @@ func signUp(dbService db.DBService) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"status":  "success",
-			"message": id,
-			"error":   false,
+			"success": true,
+			"message": "Blog created successfully",
+			"data":    blog,
 		})
 	}
 }

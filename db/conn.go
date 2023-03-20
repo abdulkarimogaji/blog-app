@@ -14,6 +14,11 @@ type DBService interface {
 	PingDB() error
 	SignUp(body SignUpRequest) (int64, error)
 	GetUserByEmail(email string) (User, error)
+
+	CreateBlog(body CreateBlogRequest) (Blog, error)
+	GetBlogBySlug(slug string) (Blog, error)
+	GetBlogById(id int) (Blog, error)
+	GetBlogs() ([]Blog, error)
 }
 
 func (db *DBStruct) PingDB() error {

@@ -25,3 +25,16 @@ type Profile struct {
 	Settings    string    `json:"settings"`
 	Socials     string    `json:"socials"`
 }
+
+type Blog struct {
+	Id        int       `json:"id"`
+	AuthorId  int       `json:"author_id"`
+	Title     string    `json:"title"`
+	Slug      string    `json:"slug"`
+	Excerpt   string    `json:"excerpt"`
+	Thumbnail string    `json:"thumbnail"`
+	Body      string    `json:"body"`
+	PostedAt  time.Time `json:"posted_at"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

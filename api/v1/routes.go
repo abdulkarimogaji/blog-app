@@ -11,5 +11,6 @@ const MYSQL_KEY_EXISTS = 1062
 func ConfigureRoutes(router *gin.RouterGroup, db db.DBService) {
 	router.POST("/signup", signUp(db))
 	router.POST("/login", login(db))
-	router.Group("/", auth.AuthorizeClient())
+	authRouter := router.Group("/", auth.AuthorizeClient())
+	authRouter.POST("/blogs", createBlog(db))
 }

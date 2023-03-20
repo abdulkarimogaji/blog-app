@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -37,6 +38,8 @@ func getErrorMsg(fe validator.FieldError) string {
 		return "should be in format: " + fe.Param()
 	case "email":
 		return "should be a valid email address"
+	case "number":
+		return "should be a valid id"
 	}
 	return "Unknown error"
 }
@@ -55,6 +58,16 @@ func validationResponse(err error, c *gin.Context) {
 			out[i] = errorMsg{toSnakeCase(fe.Field()), getErrorMsg(fe)}
 		}
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "validation error", "errors": out})
+		return
+	}
+	je, ok := err.(*json.UnmarshalTypeError)
+
+	if ok && je.Type.String() == "int" && je.Value == "string" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "validation error",
+			"error":   []errorMsg{{Field: je.Field, Message: "Should be a number"}},
+		})
 		return
 	}
 
