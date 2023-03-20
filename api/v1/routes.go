@@ -13,4 +13,6 @@ func ConfigureRoutes(router *gin.RouterGroup, db db.DBService) {
 	router.POST("/login", login(db))
 	authRouter := router.Group("/", auth.AuthorizeClient())
 	authRouter.POST("/blogs", createBlog(db))
+	authRouter.GET("/blogs/:idOrSlug", getBlogByIdOrSlug(db))
+	authRouter.GET("/blogs", getBlogsPaginate(db))
 }
