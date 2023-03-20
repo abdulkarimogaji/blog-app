@@ -1,6 +1,9 @@
 package db
 
 import (
+	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/abdulkarimogaji/blognado/util"
@@ -13,6 +16,18 @@ type CreateBlogRequest struct {
 	Thumbnail string `json:"thumbnail" binding:"required,url"`
 	Body      string `json:"body" binding:"required"`
 	PostedAt  string `json:"posted_at" binding:"required,datetime=2006-01-02 15:04:05"`
+}
+
+type GetBlogsFilters struct {
+	AuthorId     *int
+	Title        *string
+	PostedAfter  *string
+	PostedBefore *string
+}
+
+type PaginationParams struct {
+	Page  int
+	Limit int
 }
 
 func (d *DBStruct) CreateBlog(body CreateBlogRequest) (Blog, error) {
@@ -51,14 +66,48 @@ func (d *DBStruct) CreateBlog(body CreateBlogRequest) (Blog, error) {
 	return Blog{Id: int(id), AuthorId: body.AuthorId, Title: body.Title, Slug: slug, Excerpt: body.Excerpt, Thumbnail: body.Thumbnail, Body: body.Body, PostedAt: postedAt, CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
 }
 
-func (db *DBStruct) GetBlogBySlug(slug string) (Blog, error) {
-	return Blog{}, nil
+func (d *DBStruct) GetBlogBySlug(slug string) (Blog, error) {
+	var blog Blog
+	row := d.DB.QueryRow("SELECT id, author_id, title, slug, excerpt, thumbnail, body, posted_at, created_at, updated_at from blogs WHERE slug = ?;", slug)
+	err := row.Scan(&blog.Id, &blog.AuthorId, &blog.Title, &blog.Slug, &blog.Excerpt, &blog.Thumbnail, &blog.Body, &blog.PostedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	if err != nil {
+		return Blog{}, err
+	}
+	return blog, nil
 }
 
-func (db *DBStruct) GetBlogById(id int) (Blog, error) {
-	return Blog{}, nil
+func (d *DBStruct) GetBlogById(id int) (Blog, error) {
+	var blog Blog
+	row := d.DB.QueryRow("SELECT id, author_id, title, slug, excerpt, thumbnail, body, posted_at, created_at, updated_at from blogs WHERE id = ?;", id)
+	err := row.Scan(&blog.Id, &blog.AuthorId, &blog.Title, &blog.Slug, &blog.Excerpt, &blog.Thumbnail, &blog.Body, &blog.PostedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	if err != nil {
+		return Blog{}, err
+	}
+	return blog, nil
 }
 
-func (db *DBStruct) GetBlogs() ([]Blog, error) {
-	return []Blog{}, nil
+func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, error) {
+	fields := []string{"id", "author_id", "title", "slug", "excerpt", "thumbnail", "body", "posted_at", "created_at", "updated_at"}
+	sql := fmt.Sprintf("SELECT %s FROM blogs WHERE %s AND %s AND %s AND %s %s", strings.Join(fields, ","), getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore), getPaginationStr(params))
+	log.Printf("\n\n %s \n\n", sql)
+	rows, err := d.DB.Query(sql)
+
+	if err != nil {
+		return []Blog{}, err
+	}
+
+	defer rows.Close()
+
+	blogs := []Blog{}
+
+	for rows.Next() {
+		var tmp Blog
+		err = rows.Scan(&tmp.Id, &tmp.AuthorId, &tmp.Title, &tmp.Slug, &tmp.Excerpt, &tmp.Thumbnail, &tmp.Body, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt)
+		if err != nil {
+			return blogs, err
+		}
+		blogs = append(blogs, tmp)
+	}
+
+	return blogs, nil
 }
