@@ -33,7 +33,7 @@ func (m *JwtMaker) VerifyToken(token string) (*Payload, error) {
 		}
 		return []byte(m.secretKey), nil
 	}
-	jwtToken, err := jwt.ParseWithClaims(token, jwt.StandardClaims{}, keyFunc)
+	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
 	if err != nil {
 		if v_err, ok := err.(*jwt.ValidationError); ok && errors.Is(v_err.Inner, ErrTokenExpired) {
 			return nil, ErrTokenExpired

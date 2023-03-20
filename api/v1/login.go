@@ -69,7 +69,7 @@ func login(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
-		token, err := maker.CreateToken(user.Id, time.Minute*5)
+		token, err := maker.CreateToken(user.Id, time.Hour)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
