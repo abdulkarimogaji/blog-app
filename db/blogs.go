@@ -86,14 +86,23 @@ func (d *DBStruct) GetBlogById(id int) (Blog, error) {
 	return blog, nil
 }
 
-func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, error) {
+func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error) {
 	fields := []string{"id", "author_id", "title", "slug", "excerpt", "thumbnail", "body", "posted_at", "created_at", "updated_at"}
-	sql := fmt.Sprintf("SELECT %s FROM blogs WHERE %s AND %s AND %s AND %s %s", strings.Join(fields, ","), getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore), getPaginationStr(params))
+
+	where := fmt.Sprintf("%s AND %s AND %s AND %s", getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore))
+
+	sql := fmt.Sprintf("SELECT %s FROM blogs WHERE %s %s", strings.Join(fields, ","), where, getPaginationStr(params))
 	log.Printf("\n\n %s \n\n", sql)
 	rows, err := d.DB.Query(sql)
-
 	if err != nil {
-		return []Blog{}, err
+		return []Blog{}, 0, err
+	}
+
+	var total int
+	row := d.DB.QueryRow(fmt.Sprintf("SELECT COUNT(id) as total FROM blogs WHERE %s", where))
+	err = row.Scan(&total)
+	if err != nil {
+		return []Blog{}, 0, err
 	}
 
 	defer rows.Close()
@@ -104,10 +113,10 @@ func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([
 		var tmp Blog
 		err = rows.Scan(&tmp.Id, &tmp.AuthorId, &tmp.Title, &tmp.Slug, &tmp.Excerpt, &tmp.Thumbnail, &tmp.Body, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt)
 		if err != nil {
-			return blogs, err
+			return blogs, 0, err
 		}
 		blogs = append(blogs, tmp)
 	}
 
-	return blogs, nil
+	return blogs, total, nil
 }

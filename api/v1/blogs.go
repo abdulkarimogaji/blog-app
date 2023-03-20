@@ -108,7 +108,7 @@ func getBlogsPaginate(dbService db.DBService) gin.HandlerFunc {
 		c.ShouldBindQuery(&query)
 		filters, paginationParams := parseQueryParams(query)
 
-		blogs, err := dbService.GetBlogs(filters, paginationParams)
+		blogs, total, err := dbService.GetBlogs(filters, paginationParams)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -119,10 +119,33 @@ func getBlogsPaginate(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
+		var totalPages, currentPage, pageSize *int
+
+		if paginationParams.Limit == 0 {
+			totalPages = nil
+			currentPage = nil
+			pageSize = nil
+		} else {
+			tmp := total / paginationParams.Limit
+			tmp2 := 1
+			totalPages = &tmp
+			if paginationParams.Page > 0 {
+				tmp2 = paginationParams.Page
+			}
+			currentPage = &tmp2
+			pageSize = &paginationParams.Limit
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"message": "Blog created successfully",
-			"data":    blogs,
+			"data": gin.H{
+				"list":        blogs,
+				"total":       total,
+				"page":        currentPage,
+				"page_size":   pageSize,
+				"total_pages": totalPages,
+			},
 		})
 
 	}
