@@ -68,8 +68,8 @@ func (d *DBStruct) CreateBlog(body CreateBlogRequest) (Blog, error) {
 
 func (d *DBStruct) GetBlogBySlug(slug string) (Blog, error) {
 	var blog Blog
-	row := d.DB.QueryRow("SELECT id, author_id, title, slug, excerpt, thumbnail, body, posted_at, created_at, updated_at from blogs WHERE slug = ?;", slug)
-	err := row.Scan(&blog.Id, &blog.AuthorId, &blog.Title, &blog.Slug, &blog.Excerpt, &blog.Thumbnail, &blog.Body, &blog.PostedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	row := d.DB.QueryRow("SELECT blogs.*, users.id, first_name, last_name, email, photo, socials from blogs LEFT JOIN users ON users.id = author_id LEFT JOIN profile ON profile.user_id = author_id WHERE slug = ?;", slug)
+	err := row.Scan(&blog.Id, &blog.AuthorId, &blog.Title, &blog.Slug, &blog.Excerpt, &blog.Thumbnail, &blog.Body, &blog.PostedAt, &blog.CreatedAt, &blog.UpdatedAt, &blog.Author.Id, &blog.Author.FirstName, &blog.Author.LastName, &blog.Author.Email, &blog.Author.Photo, &blog.Author.Socials)
 	if err != nil {
 		return Blog{}, err
 	}
@@ -78,8 +78,8 @@ func (d *DBStruct) GetBlogBySlug(slug string) (Blog, error) {
 
 func (d *DBStruct) GetBlogById(id int) (Blog, error) {
 	var blog Blog
-	row := d.DB.QueryRow("SELECT id, author_id, title, slug, excerpt, thumbnail, body, posted_at, created_at, updated_at from blogs WHERE id = ?;", id)
-	err := row.Scan(&blog.Id, &blog.AuthorId, &blog.Title, &blog.Slug, &blog.Excerpt, &blog.Thumbnail, &blog.Body, &blog.PostedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	row := d.DB.QueryRow("SELECT blogs.*, users.id, first_name, last_name, email, photo, socials from blogs LEFT JOIN users ON users.id = author_id LEFT JOIN profile ON profile.user_id = author_id WHERE blogs.id = ?;", id)
+	err := row.Scan(&blog.Id, &blog.AuthorId, &blog.Title, &blog.Slug, &blog.Excerpt, &blog.Thumbnail, &blog.Body, &blog.PostedAt, &blog.CreatedAt, &blog.UpdatedAt, &blog.Author.Id, &blog.Author.FirstName, &blog.Author.LastName, &blog.Author.Email, &blog.Author.Photo, &blog.Author.Socials)
 	if err != nil {
 		return Blog{}, err
 	}
@@ -87,11 +87,11 @@ func (d *DBStruct) GetBlogById(id int) (Blog, error) {
 }
 
 func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error) {
-	fields := []string{"id", "author_id", "title", "slug", "excerpt", "thumbnail", "body", "posted_at", "created_at", "updated_at"}
+	fields := []string{"blogs.id", "author_id", "title", "slug", "excerpt", "thumbnail", "posted_at", "blogs.created_at", "blogs.updated_at", "users.id", "first_name", "last_name", "photo"}
 
 	where := fmt.Sprintf("%s AND %s AND %s AND %s", getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore))
 
-	sql := fmt.Sprintf("SELECT %s FROM blogs WHERE %s %s", strings.Join(fields, ","), where, getPaginationStr(params))
+	sql := fmt.Sprintf("SELECT %s FROM blogs LEFT JOIN users ON users.id = author_id LEFT JOIN profile ON profile.user_id = author_id WHERE %s %s", strings.Join(fields, ","), where, getPaginationStr(params))
 	log.Printf("\n\n %s \n\n", sql)
 	rows, err := d.DB.Query(sql)
 	if err != nil {
@@ -111,7 +111,7 @@ func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([
 
 	for rows.Next() {
 		var tmp Blog
-		err = rows.Scan(&tmp.Id, &tmp.AuthorId, &tmp.Title, &tmp.Slug, &tmp.Excerpt, &tmp.Thumbnail, &tmp.Body, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt)
+		err = rows.Scan(&tmp.Id, &tmp.AuthorId, &tmp.Title, &tmp.Slug, &tmp.Excerpt, &tmp.Thumbnail, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt, &tmp.Author.Id, &tmp.Author.FirstName, &tmp.Author.LastName, &tmp.Author.Photo)
 		if err != nil {
 			return blogs, 0, err
 		}
