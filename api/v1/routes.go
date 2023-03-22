@@ -15,6 +15,8 @@ func ConfigureRoutes(router *gin.RouterGroup, db db.DBService) {
 	authRouter.POST("/blogs", createBlog(db))
 	authRouter.GET("/blogs/:idOrSlug", getBlogByIdOrSlug(db))
 	authRouter.GET("/blogs", getBlogsPaginate(db))
+	authRouter.GET("/comments", getCommentsPaginate(db))
+	authRouter.POST("/comments", createComment(db))
 
 	// TODO: setup a guard here to only allow role = admin to delete
 	authRouter.DELETE("/:tableName/:id", deleteHandler(db))
