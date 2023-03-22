@@ -27,16 +27,26 @@ type Profile struct {
 }
 
 type Blog struct {
-	Id        int       `json:"id"`
-	AuthorId  int       `json:"author_id"`
-	Title     string    `json:"title"`
-	Slug      string    `json:"slug"`
-	Excerpt   string    `json:"excerpt"`
-	Thumbnail string    `json:"thumbnail"`
-	Body      string    `json:"body"`
-	PostedAt  time.Time `json:"posted_at"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id        int        `json:"id"`
+	AuthorId  int        `json:"author_id"`
+	Title     string     `json:"title"`
+	Slug      string     `json:"slug"`
+	Excerpt   string     `json:"excerpt"`
+	Thumbnail string     `json:"thumbnail"`
+	Body      string     `json:"body,omitempty"`
+	PostedAt  time.Time  `json:"posted_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	Author    BlogAuthor `json:"author"`
+}
+
+type BlogAuthor struct {
+	Id        int     `json:"id"`
+	FirstName string  `json:"first_name"`
+	LastName  string  `json:"last_name"`
+	Email     string  `json:"email,omitempty"`
+	Photo     *string `json:"photo,omitempty"`
+	Socials   *string `json:"socials,omitempty"`
 }
 
 type Comment struct {
