@@ -106,7 +106,7 @@ func getBlogsPaginate(dbService db.DBService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var query getBlogQuery
 		c.ShouldBindQuery(&query)
-		filters, paginationParams := parseQueryParams(query)
+		filters, paginationParams := parseBlogQueryParams(query)
 
 		blogs, total, err := dbService.GetBlogs(filters, paginationParams)
 
@@ -151,7 +151,7 @@ func getBlogsPaginate(dbService db.DBService) gin.HandlerFunc {
 	}
 }
 
-func parseQueryParams(query getBlogQuery) (db.GetBlogsFilters, db.PaginationParams) {
+func parseBlogQueryParams(query getBlogQuery) (db.GetBlogsFilters, db.PaginationParams) {
 	var limit, page int
 	limit, _ = strconv.Atoi(query.Limit)
 	page, _ = strconv.Atoi(query.Page)

@@ -38,3 +38,14 @@ type Blog struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type Comment struct {
+	Id        int       `json:"id"`
+	UserId    int       `json:"user_id"`
+	BlogId    int       `json:"blog_id"`
+	Message   string    `json:"message"`
+	Thread    string    `json:"thread"`
+	PostedAt  time.Time `json:"posted_at"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

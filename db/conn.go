@@ -19,6 +19,10 @@ type DBService interface {
 	GetBlogBySlug(slug string) (Blog, error)
 	GetBlogById(id int) (Blog, error)
 	GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error)
+
+	GetComments(filters GetCommentsFilters, params PaginationParams) ([]Comment, int, error)
+	CreateComment(body CreateCommentRequest) (Comment, error)
+
 	DeleteRow(tableName string, id int) (int, error)
 }
 
