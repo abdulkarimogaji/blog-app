@@ -98,6 +98,7 @@ type getBlogQuery struct {
 	Limit        string `form:"limit"`
 	Title        string `form:"title"`
 	AuthorId     string `form:"author_id"`
+	AuthorName   string `form:"author_name"`
 	PostedAfter  string `form:"posted_after"`
 	PostedBefore string `form:"posted_before"`
 }
@@ -157,7 +158,7 @@ func parseBlogQueryParams(query getBlogQuery) (db.GetBlogsFilters, db.Pagination
 	page, _ = strconv.Atoi(query.Page)
 
 	// get filters
-	var title, postedBefore, postedAfter *string
+	var title, postedBefore, postedAfter, authorName *string
 	var authorId *int
 
 	a_id, _ := strconv.Atoi(query.AuthorId)
@@ -172,6 +173,12 @@ func parseBlogQueryParams(query getBlogQuery) (db.GetBlogsFilters, db.Pagination
 		title = nil
 	} else {
 		title = &query.Title
+	}
+
+	if query.AuthorName == "" {
+		authorName = nil
+	} else {
+		authorName = &query.AuthorName
 	}
 
 	if _, err := time.Parse(time.DateTime, query.PostedAfter); err != nil || query.PostedAfter == "" {
@@ -189,6 +196,6 @@ func parseBlogQueryParams(query getBlogQuery) (db.GetBlogsFilters, db.Pagination
 	return db.GetBlogsFilters{Title: title,
 			PostedAfter:  postedAfter,
 			PostedBefore: postedBefore,
-			AuthorId:     authorId}, db.PaginationParams{Page: page,
+			AuthorId:     authorId, AuthorName: authorName}, db.PaginationParams{Page: page,
 			Limit: limit}
 }

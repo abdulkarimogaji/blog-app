@@ -23,6 +23,7 @@ type GetBlogsFilters struct {
 	Title        *string
 	PostedAfter  *string
 	PostedBefore *string
+	AuthorName   *string
 }
 
 type PaginationParams struct {
@@ -89,7 +90,7 @@ func (d *DBStruct) GetBlogById(id int) (Blog, error) {
 func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error) {
 	fields := []string{"blogs.id", "author_id", "title", "slug", "excerpt", "thumbnail", "posted_at", "blogs.created_at", "blogs.updated_at", "users.id", "first_name", "last_name", "photo"}
 
-	where := fmt.Sprintf("%s AND %s AND %s AND %s", getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore))
+	where := fmt.Sprintf("%s AND %s AND %s AND %s AND (%s OR %s)", getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore), getLikeClause("users.first_name", filters.AuthorName), getLikeClause("users.last_name", filters.AuthorName))
 
 	sql := fmt.Sprintf("SELECT %s FROM blogs LEFT JOIN users ON users.id = author_id LEFT JOIN profile ON profile.user_id = author_id WHERE %s %s", strings.Join(fields, ","), where, getPaginationStr(params))
 	log.Printf("\n\n %s \n\n", sql)
@@ -99,7 +100,7 @@ func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([
 	}
 
 	var total int
-	row := d.DB.QueryRow(fmt.Sprintf("SELECT COUNT(id) as total FROM blogs WHERE %s", where))
+	row := d.DB.QueryRow(fmt.Sprintf("SELECT COUNT(blogs.id) as total FROM blogs LEFT JOIN users ON users.id = author_id WHERE %s", where))
 	err = row.Scan(&total)
 	if err != nil {
 		return []Blog{}, 0, err
