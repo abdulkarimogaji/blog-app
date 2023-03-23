@@ -37,7 +37,7 @@ type Blog struct {
 	PostedAt  time.Time  `json:"posted_at"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	Author    BlogAuthor `json:"author"`
+	Author    BlogAuthor `json:"author,omitempty"`
 }
 
 type BlogAuthor struct {
@@ -50,12 +50,20 @@ type BlogAuthor struct {
 }
 
 type Comment struct {
-	Id        int       `json:"id"`
-	UserId    int       `json:"user_id"`
-	BlogId    int       `json:"blog_id"`
-	Message   string    `json:"message"`
-	Thread    string    `json:"thread"`
-	PostedAt  time.Time `json:"posted_at"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id        int         `json:"id"`
+	UserId    int         `json:"user_id"`
+	BlogId    int         `json:"blog_id"`
+	Message   string      `json:"message"`
+	Thread    string      `json:"thread"`
+	PostedAt  time.Time   `json:"posted_at"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+	User      CommentUser `json:"user,omitempty"`
+}
+
+type CommentUser struct {
+	Id        int    `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Photo     string `json:"photo"`
 }

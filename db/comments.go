@@ -23,11 +23,11 @@ type CreateCommentRequest struct {
 }
 
 func (d *DBStruct) GetComments(filters GetCommentsFilters, params PaginationParams) ([]Comment, int, error) {
-	fields := []string{"id", "user_id", "blog_id", "message", "posted_at", "created_at", "updated_at"}
+	fields := []string{"comments.id", "comments.user_id", "blog_id", "message", "posted_at", "comments.created_at", "comments.updated_at", "users.id", "first_name", "last_name", "photo"}
 
-	where := fmt.Sprintf("%s AND %s AND %s AND %s AND %s", getIntClause("user_id", filters.UserId), getIntClause("blog_id", filters.BlogId), getLikeClause("message", filters.Message), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore))
+	where := fmt.Sprintf("%s AND %s AND %s AND %s AND %s", getIntClause("comments.user_id", filters.UserId), getIntClause("blog_id", filters.BlogId), getLikeClause("message", filters.Message), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore))
 
-	sql := fmt.Sprintf("SELECT %s FROM comments WHERE %s %s", strings.Join(fields, ","), where, getPaginationStr(params))
+	sql := fmt.Sprintf("SELECT %s FROM comments LEFT JOIN users ON users.id = comments.user_id LEFT JOIN profile on profile.user_id = comments.user_id WHERE %s %s", strings.Join(fields, ","), where, getPaginationStr(params))
 	log.Printf("\n\n %s \n\n", sql)
 	rows, err := d.DB.Query(sql)
 	if err != nil {
@@ -47,7 +47,7 @@ func (d *DBStruct) GetComments(filters GetCommentsFilters, params PaginationPara
 
 	for rows.Next() {
 		var tmp Comment
-		err = rows.Scan(&tmp.Id, &tmp.UserId, &tmp.BlogId, &tmp.Message, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt)
+		err = rows.Scan(&tmp.Id, &tmp.UserId, &tmp.BlogId, &tmp.Message, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt, &tmp.User.Id, &tmp.User.FirstName, &tmp.User.LastName, &tmp.User.Photo)
 		if err != nil {
 			return comments, 0, err
 		}
