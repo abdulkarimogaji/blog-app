@@ -36,7 +36,15 @@ func signUp(dbService db.DBService, taskDistributor worker.TaskDistributor) gin.
 		}
 
 		body.Password = hashedPassword
-		id, err := dbService.SignUp(body)
+		id, err := dbService.SignUp(body, func(body db.SignUpRequest) error {
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+
+			return taskDistributor.DistributeTaskSendVerifyEmail(context.Background(), &worker.PayloadSendVerifyEmail{Email: body.Email}, opts...)
+		})
 		if err != nil {
 			me, ok := err.(*mysql.MySQLError)
 			if ok && me.Number == MYSQL_KEY_EXISTS {
@@ -47,23 +55,6 @@ func signUp(dbService db.DBService, taskDistributor worker.TaskDistributor) gin.
 				})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"message": "server error",
-				"error":   err.Error(),
-			})
-			return
-		}
-
-		opts := []asynq.Option{
-			asynq.MaxRetry(10),
-			asynq.ProcessIn(10 * time.Second),
-			asynq.Queue(worker.QueueCritical),
-		}
-
-		err = taskDistributor.DistributeTaskSendVerifyEmail(context.Background(), &worker.PayloadSendVerifyEmail{Email: body.Email}, opts...)
-
-		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
 				"message": "server error",
