@@ -2,7 +2,9 @@ package worker
 
 import (
 	"context"
+	"log"
 
+	"github.com/abdulkarimogaji/blognado/api/lambda"
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/hibiken/asynq"
 )
@@ -20,18 +22,23 @@ type TaskProcessor interface {
 type RedisTaskProcessor struct {
 	server    *asynq.Server
 	dbService db.DBService
+	mailer    lambda.EmailSender
 }
 
-func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, dbService db.DBService) TaskProcessor {
+func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, dbService db.DBService, mailer lambda.EmailSender) TaskProcessor {
 	server := asynq.NewServer(redisOpt, asynq.Config{
 		Queues: map[string]int{
 			QueueCritical: 10,
 			QueueDefault:  5,
 		},
+		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
+			log.Println("ERROR LOG: ", task.Type(), err)
+		}),
 	})
 	return &RedisTaskProcessor{
 		server:    server,
 		dbService: dbService,
+		mailer:    mailer,
 	}
 }
 

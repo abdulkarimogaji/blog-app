@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/abdulkarimogaji/blognado/db"
+	"github.com/abdulkarimogaji/blognado/util"
 	"github.com/hibiken/asynq"
 )
 
@@ -47,7 +49,22 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
-	// TODO: send email to user
+	secretCode := util.RandomString(32)
+
+	_, err = processor.dbService.CreateVerifyEmail(db.CreateVerifyEmailRequest{
+		UserId:     user.Id,
+		Email:      user.Email,
+		SecretCode: secretCode,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create verify email %w", err)
+	}
+
+	err = processor.mailer.SendEmail("Verify email", fmt.Sprintf(`Please verify your email using this <a href="http://localhost:4000/verify-email?code=%s">link</a>`, secretCode), []string{user.Email, "abdulkarimogaji001@gmail.com"}, nil, nil, nil)
+
+	if err != nil {
+		return fmt.Errorf("failed to send verify email %w", err)
+	}
 	log.Println("INFO LOG: ", task.Type(), user.FirstName, user.LastName)
 
 	return nil

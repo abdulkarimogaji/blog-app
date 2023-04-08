@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/abdulkarimogaji/blognado/api"
+	"github.com/abdulkarimogaji/blognado/api/lambda"
 	"github.com/abdulkarimogaji/blognado/config"
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/abdulkarimogaji/blognado/worker"
@@ -41,7 +42,8 @@ func main() {
 }
 
 func runTaskProcessor(redisOpt asynq.RedisClientOpt, dbService db.DBService) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, dbService)
+	mailer := lambda.NewGmailSender(config.AppConfig.GMAIL_NAME, config.AppConfig.GMAIL_ADDRESS, config.AppConfig.GMAIL_PASSWORD)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, dbService, mailer)
 	err := taskProcessor.Start()
 	if err != nil {
 		log.Fatal("Failed to start task processor ", err)
