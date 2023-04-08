@@ -19,7 +19,14 @@ type SignUpRequest struct {
 }
 
 func (d *DBStruct) SignUp(body SignUpRequest) (int64, error) {
-	stmt, err := d.DB.Prepare("INSERT INTO users (first_name, last_name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);")
+	tx, err := d.DB.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare("INSERT INTO users (first_name, last_name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		return 0, err
 	}
@@ -39,7 +46,7 @@ func (d *DBStruct) SignUp(body SignUpRequest) (int64, error) {
 	}
 
 	// insert to profile table
-	stmt, err = d.DB.Prepare("INSERT INTO profile (user_id, date_of_birth, about, photo, city, country, settings, socials, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
+	stmt, err = tx.Prepare("INSERT INTO profile (user_id, date_of_birth, about, photo, city, country, settings, socials, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
 
 	if err != nil {
 		return id, err
@@ -54,6 +61,11 @@ func (d *DBStruct) SignUp(body SignUpRequest) (int64, error) {
 	_, err = result.LastInsertId()
 	if err != nil {
 		return id, err
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		return 0, err
 	}
 
 	return id, nil

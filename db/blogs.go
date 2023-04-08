@@ -88,7 +88,7 @@ func (d *DBStruct) GetBlogById(id int) (Blog, error) {
 }
 
 func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([]Blog, int, error) {
-	fields := []string{"blogs.id", "author_id", "title", "slug", "excerpt", "thumbnail", "posted_at", "blogs.created_at", "blogs.updated_at", "users.id", "first_name", "last_name", "photo"}
+	fields := []string{"blogs.id", "author_id", "title", "slug", "excerpt", "thumbnail", "posted_at", "blogs.created_at", "blogs.updated_at", "users.id", "first_name", "last_name", "photo", "socials"}
 
 	where := fmt.Sprintf("%s AND %s AND %s AND %s AND (%s OR %s)", getIntClause("author_id", filters.AuthorId), getLikeClause("title", filters.Title), getTimeClause("posted_at", ">", filters.PostedAfter), getTimeClause("posted_at", "<", filters.PostedBefore), getLikeClause("users.first_name", filters.AuthorName), getLikeClause("users.last_name", filters.AuthorName))
 
@@ -112,7 +112,7 @@ func (d *DBStruct) GetBlogs(filters GetBlogsFilters, params PaginationParams) ([
 
 	for rows.Next() {
 		var tmp Blog
-		err = rows.Scan(&tmp.Id, &tmp.AuthorId, &tmp.Title, &tmp.Slug, &tmp.Excerpt, &tmp.Thumbnail, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt, &tmp.Author.Id, &tmp.Author.FirstName, &tmp.Author.LastName, &tmp.Author.Photo)
+		err = rows.Scan(&tmp.Id, &tmp.AuthorId, &tmp.Title, &tmp.Slug, &tmp.Excerpt, &tmp.Thumbnail, &tmp.PostedAt, &tmp.CreatedAt, &tmp.UpdatedAt, &tmp.Author.Id, &tmp.Author.FirstName, &tmp.Author.LastName, &tmp.Author.Photo, &tmp.Author.Socials)
 		if err != nil {
 			return blogs, 0, err
 		}

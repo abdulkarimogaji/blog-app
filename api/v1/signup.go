@@ -1,17 +1,21 @@
 package v1
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/abdulkarimogaji/blognado/util"
+	"github.com/abdulkarimogaji/blognado/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	_ "github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
+	"github.com/hibiken/asynq"
 )
 
-func signUp(dbService db.DBService) gin.HandlerFunc {
+func signUp(dbService db.DBService, taskDistributor worker.TaskDistributor) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		var body db.SignUpRequest
@@ -43,6 +47,23 @@ func signUp(dbService db.DBService) gin.HandlerFunc {
 				})
 				return
 			}
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "server error",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		opts := []asynq.Option{
+			asynq.MaxRetry(10),
+			asynq.ProcessIn(10 * time.Second),
+			asynq.Queue(worker.QueueCritical),
+		}
+
+		err = taskDistributor.DistributeTaskSendVerifyEmail(context.Background(), &worker.PayloadSendVerifyEmail{Email: body.Email}, opts...)
+
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
 				"message": "server error",

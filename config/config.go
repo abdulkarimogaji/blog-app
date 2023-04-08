@@ -14,6 +14,7 @@ type Config struct {
 	GMAIL_NAME     string `mapstructure:"GMAIL_NAME"`
 	GMAIL_ADDRESS  string `mapstructure:"GMAIL_ADDRESS"`
 	GMAIL_PASSWORD string `mapstructure:"GMAIL_PASSWORD"`
+	REDIS_ADDRESS  string `mapstructure:"REDIS_ADDRESS"`
 }
 
 var AppConfig Config
