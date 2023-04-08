@@ -23,6 +23,7 @@ type DBService interface {
 	GetComments(filters GetCommentsFilters, params PaginationParams) ([]Comment, int, error)
 	CreateComment(body CreateCommentRequest) (Comment, error)
 	CreateVerifyEmail(body CreateVerifyEmailRequest) (int, error)
+	VerifyEmail(body VerifyEmailRequest) error
 
 	DeleteRow(tableName string, id int) (int, error)
 }

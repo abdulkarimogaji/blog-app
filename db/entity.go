@@ -68,3 +68,13 @@ type CommentUser struct {
 	LastName  string `json:"last_name"`
 	Photo     string `json:"photo"`
 }
+
+type VerifyEmail struct {
+	Id         int       `json:"id"`
+	UserId     int       `json:"user_id"`
+	Email      string    `json:"email"`
+	IsUsed     bool      `json:"is_used"`
+	SecretCode string    `json:"secret_code"`
+	CreatedAt  time.Time `json:"created_at"`
+	ExpiredAt  time.Time `json:"expired_at"`
+}
