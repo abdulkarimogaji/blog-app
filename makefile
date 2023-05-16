@@ -10,4 +10,10 @@ redis:
 ping-redis:
 	docker exec -it redis redis-cli ping
 
-.PHONY: server db redis
+migrateup:
+	migrate -path db/migration -database "mysql://root:password@tcp(127.0.0.1:4001)/blognado?parseTime=true" -verbose up
+
+migratedown:
+	migrate -path db/migration -database "mysql://root:password@tcp(127.0.0.1:4001)/blognado?parseTime=true" -verbose down
+
+.PHONY: server db redis migrateup migratedown
