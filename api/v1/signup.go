@@ -36,7 +36,7 @@ func signUp(dbService db.DBService, taskDistributor worker.TaskDistributor) gin.
 		}
 
 		body.Password = hashedPassword
-		id, err := dbService.SignUp(body, func(body db.SignUpRequest) error {
+		id, err := dbService.SignUp(c, body, func(body db.SignUpRequest) error {
 			opts := []asynq.Option{
 				asynq.MaxRetry(10),
 				asynq.ProcessIn(10 * time.Second),

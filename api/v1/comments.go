@@ -27,7 +27,7 @@ func getCommentsPaginate(dbService db.DBService) gin.HandlerFunc {
 		c.ShouldBindQuery(&query)
 		filters, paginationParams := parseCommentQueryParams(query)
 
-		comments, total, err := dbService.GetComments(filters, paginationParams)
+		comments, total, err := dbService.GetComments(c, filters, paginationParams)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -130,7 +130,7 @@ func createComment(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
-		comment, err := dbService.CreateComment(body)
+		comment, err := dbService.CreateComment(c, body)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, gin.H{

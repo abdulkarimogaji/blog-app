@@ -21,7 +21,7 @@ func createBlog(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
-		blog, err := dbService.CreateBlog(body)
+		blog, err := dbService.CreateBlog(c, body)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, gin.H{
@@ -64,9 +64,9 @@ func getBlogByIdOrSlug(dbService db.DBService) gin.HandlerFunc {
 		var blog db.Blog
 		id, err := strconv.Atoi(idOrSlug)
 		if err == nil {
-			blog, err = dbService.GetBlogById(id)
+			blog, err = dbService.GetBlogById(c, id)
 		} else {
-			blog, err = dbService.GetBlogBySlug(idOrSlug)
+			blog, err = dbService.GetBlogBySlug(c, idOrSlug)
 		}
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -109,7 +109,7 @@ func getBlogsPaginate(dbService db.DBService) gin.HandlerFunc {
 		c.ShouldBindQuery(&query)
 		filters, paginationParams := parseBlogQueryParams(query)
 
-		blogs, total, err := dbService.GetBlogs(filters, paginationParams)
+		blogs, total, err := dbService.GetBlogs(c, filters, paginationParams)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

@@ -21,7 +21,7 @@ func deleteHandler(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
-		id, err := dbService.DeleteRow(params.TableName, params.Id)
+		id, err := dbService.DeleteRow(c, params.TableName, params.Id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -15,9 +16,9 @@ type VerifyEmailRequest struct {
 	Email      string `form:"email" binding:"required,email"`
 }
 
-func (d *DBStruct) CreateVerifyEmail(body CreateVerifyEmailRequest) (int, error) {
+func (d *DBStruct) CreateVerifyEmail(ctx context.Context, body CreateVerifyEmailRequest) (int, error) {
 
-	stmt, err := d.DB.Prepare("INSERT INTO verify_emails (user_id, email, secret_code, created_at, expired_at) VALUES (?, ?, ?, ?, ?);")
+	stmt, err := d.DB.PrepareContext(ctx, "INSERT INTO verify_email (user_id, email, secret_code, created_at, expired_at) VALUES (?, ?, ?, ?, ?);")
 	if err != nil {
 		return 0, err
 	}
@@ -39,7 +40,7 @@ func (d *DBStruct) CreateVerifyEmail(body CreateVerifyEmailRequest) (int, error)
 	return int(id), nil
 }
 
-func (d *DBStruct) VerifyEmail(body VerifyEmailRequest) error {
+func (d *DBStruct) VerifyEmail(ctx context.Context, body VerifyEmailRequest) error {
 	tx, err := d.DB.Begin()
 	if err != nil {
 		return err
@@ -48,7 +49,7 @@ func (d *DBStruct) VerifyEmail(body VerifyEmailRequest) error {
 	defer tx.Rollback()
 
 	// get verify_email
-	row := tx.QueryRow("SELECT id, user_id, is_used, expired_at from verify_emails WHERE email = ? AND secret_code = ?", body.Email, body.SecretCode)
+	row := tx.QueryRowContext(ctx, "SELECT id, user_id, is_used, expired_at from verify_email WHERE email = ? AND secret_code = ?", body.Email, body.SecretCode)
 
 	var verifyEmail VerifyEmail
 	err = row.Scan(&verifyEmail.Id, &verifyEmail.UserId, &verifyEmail.IsUsed, &verifyEmail.ExpiredAt)
@@ -62,23 +63,23 @@ func (d *DBStruct) VerifyEmail(body VerifyEmailRequest) error {
 	}
 
 	// set is_used to true
-	stmt, err := tx.Prepare("UPDATE verify_email SET is_used = true WHERE id = ?")
+	stmt, err := tx.PrepareContext(ctx, "UPDATE verify_email SET is_used = true WHERE id = ?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(verifyEmail.Id)
+	_, err = stmt.ExecContext(ctx, verifyEmail.Id)
 	if err != nil {
 		return err
 	}
 
 	// set is_email_verified to true
-	stmt, err = tx.Prepare("UPDATE users SET is_email_verified = true WHERE id = ?")
+	stmt, err = tx.PrepareContext(ctx, "UPDATE users SET is_email_verified = true WHERE id = ?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(verifyEmail.UserId)
+	_, err = stmt.ExecContext(ctx, verifyEmail.UserId)
 	if err != nil {
 		return err
 	}
