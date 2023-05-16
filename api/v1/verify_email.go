@@ -16,7 +16,7 @@ func verifyEmail(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
-		err = dbService.VerifyEmail(body)
+		err = dbService.VerifyEmail(c, body)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,

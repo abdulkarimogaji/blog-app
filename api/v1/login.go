@@ -24,7 +24,7 @@ func login(dbService db.DBService) gin.HandlerFunc {
 		}
 
 		// get user
-		user, err := dbService.GetUserByEmail(body.Email)
+		user, err := dbService.GetUserByEmail(c, body.Email)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, gin.H{

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"time"
 )
 
@@ -18,7 +19,7 @@ type SignUpRequest struct {
 	Socials     *string `json:"socials" binding:"omitempty,json"`
 }
 
-func (d *DBStruct) SignUp(body SignUpRequest, afterCreate func(body SignUpRequest) error) (int64, error) {
+func (d *DBStruct) SignUp(ctx context.Context, body SignUpRequest, afterCreate func(body SignUpRequest) error) (int64, error) {
 	tx, err := d.DB.Begin()
 	if err != nil {
 		return 0, err
@@ -26,7 +27,7 @@ func (d *DBStruct) SignUp(body SignUpRequest, afterCreate func(body SignUpReques
 
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare("INSERT INTO users (first_name, last_name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);")
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO users (first_name, last_name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		return 0, err
 	}
@@ -34,7 +35,7 @@ func (d *DBStruct) SignUp(body SignUpRequest, afterCreate func(body SignUpReques
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
-	result, err := stmt.Exec(body.FirstName, body.LastName, body.Email, body.Password, createdAt, updatedAt)
+	result, err := stmt.ExecContext(ctx, body.FirstName, body.LastName, body.Email, body.Password, createdAt, updatedAt)
 
 	if err != nil {
 		return 0, err
@@ -46,13 +47,13 @@ func (d *DBStruct) SignUp(body SignUpRequest, afterCreate func(body SignUpReques
 	}
 
 	// insert to profile table
-	stmt, err = tx.Prepare("INSERT INTO profile (user_id, date_of_birth, about, photo, city, country, settings, socials, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
+	stmt, err = tx.PrepareContext(ctx, "INSERT INTO profile (user_id, date_of_birth, about, photo, city, country, settings, socials, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
 
 	if err != nil {
 		return id, err
 	}
 
-	result, err = stmt.Exec(id, body.DateOfBirth, body.About, body.Photo, body.City, body.Country, body.Settings, body.Socials, createdAt, updatedAt)
+	result, err = stmt.ExecContext(ctx, id, body.DateOfBirth, body.About, body.Photo, body.City, body.Country, body.Settings, body.Socials, createdAt, updatedAt)
 
 	if err != nil {
 		return id, err
