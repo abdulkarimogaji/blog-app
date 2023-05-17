@@ -3,13 +3,14 @@ package v1
 import (
 	"database/sql"
 	"net/http"
-	"time"
 
 	"github.com/abdulkarimogaji/blognado/api/middleware/auth"
+	"github.com/abdulkarimogaji/blognado/config"
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/abdulkarimogaji/blognado/util"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/go-sql-driver/mysql"
 )
 
 func login(dbService db.DBService) gin.HandlerFunc {
@@ -58,7 +59,7 @@ func login(dbService db.DBService) gin.HandlerFunc {
 		}
 
 		// create token
-		maker, err := auth.NewJwtMaker()
+		tokenMaker, err := auth.NewJwtMaker()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
@@ -69,13 +70,51 @@ func login(dbService db.DBService) gin.HandlerFunc {
 			return
 		}
 
-		token, err := maker.CreateToken(user.Id, time.Hour)
+		accessToken, accessTokenPayload, err := tokenMaker.CreateToken(user.Id, config.AppConfig.ACCESS_TOKEN_DURATION)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
 				"message": "server error",
 				"error":   err.Error(),
 				"data":    nil,
+			})
+			return
+		}
+
+		refreshToken, refreshTokenPayload, err := tokenMaker.CreateToken(user.Id, config.AppConfig.REFRESH_TOKEN_DURATION)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "server error",
+				"error":   err.Error(),
+				"data":    nil,
+			})
+			return
+		}
+
+		session, err := dbService.CreateSession(c, db.CreateSessionRequest{
+			Id:           refreshTokenPayload.ID,
+			UserId:       user.Id,
+			RefreshToken: refreshToken,
+			ClientIp:     c.ClientIP(),
+			UserAgent:    c.Request.UserAgent(),
+			ExpiresAt:    refreshTokenPayload.ExpiredAt,
+		})
+
+		if err != nil {
+			me, ok := err.(*mysql.MySQLError)
+			if ok && me.Number == MYSQL_KEY_EXISTS {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"message": "session exists",
+					"error":   err.Error(),
+				})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "server error",
+				"error":   err.Error(),
 			})
 			return
 		}
@@ -83,11 +122,15 @@ func login(dbService db.DBService) gin.HandlerFunc {
 		user.Password = ""
 
 		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"message": "login successful",
-			"error":   nil,
-			"user":    user,
-			"token":   token,
+			"success":                  true,
+			"message":                  "login successful",
+			"error":                    nil,
+			"user":                     user,
+			"access_token":             accessToken,
+			"refresh_token":            refreshToken,
+			"access_token_expires_at":  accessTokenPayload.ExpiredAt,
+			"refresh_token_expires_at": refreshTokenPayload.ExpiredAt,
+			"session_id":               session.Id,
 		})
 	}
 }

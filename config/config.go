@@ -2,19 +2,22 @@ package config
 
 import (
 	"flag"
+	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	PORT           string `mapstructure:"PORT"`
-	DB_URI         string `mapstructure:"DB_URI"`
-	JWT_SECRET     string `mapstructure:"JWT_SECRET"`
-	GMAIL_NAME     string `mapstructure:"GMAIL_NAME"`
-	GMAIL_ADDRESS  string `mapstructure:"GMAIL_ADDRESS"`
-	GMAIL_PASSWORD string `mapstructure:"GMAIL_PASSWORD"`
-	REDIS_ADDRESS  string `mapstructure:"REDIS_ADDRESS"`
+	PORT                   string        `mapstructure:"PORT"`
+	DB_URI                 string        `mapstructure:"DB_URI"`
+	JWT_SECRET             string        `mapstructure:"JWT_SECRET"`
+	ACCESS_TOKEN_DURATION  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	REFRESH_TOKEN_DURATION time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	GMAIL_NAME             string        `mapstructure:"GMAIL_NAME"`
+	GMAIL_ADDRESS          string        `mapstructure:"GMAIL_ADDRESS"`
+	GMAIL_PASSWORD         string        `mapstructure:"GMAIL_PASSWORD"`
+	REDIS_ADDRESS          string        `mapstructure:"REDIS_ADDRESS"`
 }
 
 var AppConfig Config
