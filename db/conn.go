@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/abdulkarimogaji/blognado/config"
+	"github.com/google/uuid"
 )
 
 type DBStruct struct {
@@ -25,6 +26,9 @@ type DBService interface {
 	CreateComment(ctx context.Context, body CreateCommentRequest) (Comment, error)
 	CreateVerifyEmail(ctx context.Context, body CreateVerifyEmailRequest) (int, error)
 	VerifyEmail(ctx context.Context, body VerifyEmailRequest) error
+
+	CreateSession(ctx context.Context, body CreateSessionRequest) (Session, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 
 	DeleteRow(ctx context.Context, tableName string, id int) (int, error)
 }

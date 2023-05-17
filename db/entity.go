@@ -2,6 +2,8 @@ package db
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -77,4 +79,15 @@ type VerifyEmail struct {
 	SecretCode string    `json:"secret_code"`
 	CreatedAt  time.Time `json:"created_at"`
 	ExpiredAt  time.Time `json:"expired_at"`
+}
+
+type Session struct {
+	Id           uuid.UUID `json:"id"`
+	UserId       int       `json:"user_id"`
+	RefreshToken string    `json:"refresh_token"`
+	ClientIp     string    `json:"client_ip"`
+	UserAgent    string    `json:"user_agent"`
+	IsBlocked    bool      `json:"is_blocked"`
+	CreatedAt    time.Time `json:"created_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
 }
