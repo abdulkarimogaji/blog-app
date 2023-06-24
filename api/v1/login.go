@@ -3,17 +3,20 @@ package v1
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/abdulkarimogaji/blognado/api/middleware/auth"
 	"github.com/abdulkarimogaji/blognado/config"
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/abdulkarimogaji/blognado/util"
+	"github.com/abdulkarimogaji/blognado/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-sql-driver/mysql"
+	"github.com/hibiken/asynq"
 )
 
-func login(dbService db.DBService) gin.HandlerFunc {
+func login(dbService db.DBService, taskDistributor worker.TaskDistributor) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body db.LoginRequest
 		err := c.ShouldBindBodyWith(&body, binding.JSON)
@@ -52,6 +55,34 @@ func login(dbService db.DBService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"success": false,
 				"message": "Incorrect email or password",
+				"error":   true,
+				"data":    nil,
+			})
+			return
+		}
+
+		if !user.IsEmailVerified {
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+
+			err = taskDistributor.DistributeTaskSendVerifyEmail(c, &worker.PayloadSendVerifyEmail{Email: body.Email}, opts...)
+
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "Failed to distribute send verify email task",
+					"error":   true,
+					"data":    err,
+				})
+				return
+			}
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "Email is not verified",
 				"error":   true,
 				"data":    nil,
 			})

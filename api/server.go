@@ -10,6 +10,7 @@ import (
 	"github.com/abdulkarimogaji/blognado/config"
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/abdulkarimogaji/blognado/worker"
+	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -26,7 +27,7 @@ type GinServer struct {
 	TaskDistributor worker.TaskDistributor
 }
 
-func NewServer(db db.DBService, taskDistributor worker.TaskDistributor) Server {
+func NewServer(db db.DBService, taskDistributor worker.TaskDistributor, cloudinaryInstance *cloudinary.Cloudinary) Server {
 	r := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -42,7 +43,7 @@ func NewServer(db db.DBService, taskDistributor worker.TaskDistributor) Server {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	lambda.ConfigureRoutes(r.Group("/api/lambda/"))
+	lambda.ConfigureRoutes(r.Group("/api/lambda/"), cloudinaryInstance)
 	v1.ConfigureRoutes(r.Group("/v1/api/"), db, taskDistributor)
 
 	r.GET("/health", func(c *gin.Context) {

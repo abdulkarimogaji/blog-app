@@ -1,4 +1,10 @@
 {
-  "cSpell.words": ["abdulkarimogaji", "blognado", "datetime", "gonic"],
+  "cSpell.words": [
+    "abdulkarimogaji",
+    "blognado",
+    "cloudinary",
+    "datetime",
+    "gonic"
+  ],
   "cSpell.ignoreWords": ["asynq", "hibiken", "mapstructure", "pflag"]
 }
