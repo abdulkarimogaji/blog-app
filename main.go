@@ -9,6 +9,7 @@ import (
 	"github.com/abdulkarimogaji/blognado/db"
 	"github.com/abdulkarimogaji/blognado/worker"
 	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hibiken/asynq"
 )
@@ -28,10 +29,18 @@ func main() {
 
 	// connect cloudinary
 	cloudinaryInstance, err := cloudinary.NewFromURL(config.AppConfig.CLOUDINARY_URL)
+	if err != nil {
+		log.Fatalf("failed to connect to cloudinary %v", err)
+	}
+
+	opts, err := redis.ParseURL(config.AppConfig.REDIS_ADDRESS)
+	if err != nil {
+		log.Fatalf("invalid redis uri %v", err)
+	}
 
 	// setup async worker
 	redisOpt := asynq.RedisClientOpt{
-		Addr: config.AppConfig.REDIS_ADDRESS,
+		Addr: opts.Addr,
 	}
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
